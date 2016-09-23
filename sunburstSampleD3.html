@@ -1,0 +1,112 @@
+<HTML>
+	<HEAD>
+		<!--Access to the page with http://localhost:8080/-->
+		<TITLE>D3 tutorial</TITLE>
+		<SCRIPT src = "http://d3js.org/d3.v3.min.js"></SCRIPT>
+		<SCRIPT src = "jquery-2.2.1.min.js"></SCRIPT>
+		<SCRIPT src = "jquery-ui-1.11.4.min.js"></SCRIPT>
+		<SCRIPT src = "Sunburst.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="sunburst.css">
+		<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="styles.css">
+	</HEAD>
+	<BODY>
+		<p > This is a Sunburst Chart</p>
+		<div id="sunburstchart"  style="max-height: 300px;"></div>
+		<script>
+		
+			d3.select("p")
+				.text("Hello World!")
+				.style("color","red");
+
+			d3.json("Sunburst.json" , function(data) {
+			
+				//var jsonData = JSON.parse(data);
+				var enterpriseData = data[2];
+				var dataJ = BuildDataFromJSon(data);
+
+				if (dataJ[0].length > 0 && enterpriseData.length > 0) {
+					var sunburstParam = {
+						jsonData: data,
+						cb: null,
+						centertype: 100,
+						centerlabel: 'Enterprise',
+						xlabel: 'Score',
+						ylabel: 'Volume',
+						enterpriseData: enterpriseData,
+						scorePrecision: 0
+				};
+				GenerateNavWheel(sunburstParam);}
+				
+			});
+			
+		function BuildDataFromJSon(jsonData) {
+
+			//Variable declaration
+			var firstLevelData = [],
+				secondLevelData = [],
+				i,
+				j,
+				dataLenLevel1,
+				dataLenLevel2,
+				data = [],
+				firstLevelID,
+				jasonDataLevel1,
+				jasonDataLevel2,
+				color,
+				firstLevelCount = 0,
+				brightness;
+
+			//Initialize the variables
+			jasonDataLevel1 = jsonData[0];
+			jasonDataLevel2 = jsonData[1];
+			dataLenLevel1 = jasonDataLevel1.length;
+
+			// Build the data arrays
+			for (i = 0; i < dataLenLevel1; i += 1) {
+				if (jasonDataLevel1[i].xval != "-999") {
+					firstLevelID = jasonDataLevel1[i].id;
+					color = i > 0 ? i + 1 : i;
+
+					//Add first level data
+					firstLevelData.push({
+						name: jasonDataLevel1[i].name,
+						y: parseFloat(jasonDataLevel1[i].yval),
+						score: parseFloat(jasonDataLevel1[i].xval),
+						color: applicationColors[firstLevelCount],
+						refType: parseInt(jasonDataLevel1[i].type),
+						refID: parseInt(jasonDataLevel1[i].id),
+						rVal: parseFloat(jasonDataLevel1[i].rval)
+					});
+
+					//Add second level data
+					var filteredLevel2 = GetElementsByParentID(jsonData[1], firstLevelID);
+					dataLenLevel2 = filteredLevel2.length;
+					for (j = 0; j < dataLenLevel2; j += 1) {
+						if (filteredLevel2[j].xval != "-999") {
+							brightness = 0.2 - (j / dataLenLevel2) / 5;
+							secondLevelData.push({
+								name: filteredLevel2[j].name,
+								y: parseInt(filteredLevel2[j].yval),
+								score: parseFloat(filteredLevel2[j].xval),
+								color: applicationColors[firstLevelCount],
+								refType: parseInt(filteredLevel2[j].type),
+								refID: parseInt(filteredLevel2[j].id),
+								refParentType: parseInt(filteredLevel2[j].parentreftype),
+								refParentID: parseInt(filteredLevel2[j].parentrefid),
+								rVal: parseFloat(jasonDataLevel1[i].rval)
+							});
+						}
+					}
+					firstLevelCount++;
+				}
+
+			}
+			data.push(firstLevelData);
+			data.push(secondLevelData);
+			return data;
+		}
+
+		</script>
+	</BODY>
+</HTML>
